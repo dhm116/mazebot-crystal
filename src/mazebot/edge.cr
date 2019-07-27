@@ -11,10 +11,6 @@ module Mazebot
       self.weight <=> other.weight
     end
 
-    def to_s
-      "#{from.to_s} => #{to.to_s} with weight #{weight}"
-    end
-
     def to_s(io)
       io << from << " => " << to << " with weight " << weight
     end

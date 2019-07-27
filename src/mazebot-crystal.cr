@@ -9,7 +9,7 @@ directions = result[:directions]
 maze = result[:maze]
 solution = result[:solution]
 
-directions_hash = directions.index_by { |tpl| {tpl[:node].location.x, tpl[:node].location.y} }
+directions_hash = directions.index_by { |tpl| {tpl[:node].point.x, tpl[:node].point.y} }
 
 maze.print()
 

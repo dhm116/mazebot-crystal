@@ -12,7 +12,7 @@ module Mazebot
     # Create and add nodes to graph
     maze.map.each_with_index {|row, y|
       row.each_with_index {|char, x|
-        node = graph.add_node("#{x},#{y}", location: Mazebot::Coordinate.new(x, y, char))
+        node = graph.add_node(Mazebot::Point.new(x, y), char)
         maze.start = node if char === "A"
         maze.finish = node if char === "B"
       }
@@ -21,17 +21,17 @@ module Mazebot
     # Create and add Edges to anything that isn't connected to an "X" space
     graph.node_hash.values.each do |from|
       from
-        .adjacent_nodes {|x, y| valid_range.includes?(x) && valid_range.includes?(y) }
-        .reject {|node| node.location.character === "X"}
-        .each {|to| graph.add_edge(from, to, Mazebot::Maze.manhattan_distance(maze.start.as(Mazebot::Node).location, to.location))}
+        .adjacent_nodes {|point| valid_range.includes?(point.x) && valid_range.includes?(point.y) }
+        .reject {|node| node.character === "X"}
+        .each {|to| graph.add_edge(from, to, Mazebot::Maze.manhattan_distance(maze.start.as(Mazebot::Node), to))}
     end
 
-    dijkstra = Dijkstra.new(graph, maze.start.as(Node))
-    solution = dijkstra.shortest_path_to(maze.finish.as(Node))
+    dijkstra = Dijkstra.new(graph, maze.start.as(Mazebot::Node))
+    solution = dijkstra.shortest_path_to(maze.finish.as(Mazebot::Node))
     directions = solution.map_with_index do |node, index|
       {
         node: node,
-        direction: node.location.direction_to(solution[index-1].location).as(String)
+        direction: node.direction_to(solution[index-1]).as(String)
       }
     end
     # Remove the starting position
@@ -53,7 +53,7 @@ module Mazebot
     # Create and add nodes to graph
     maze.map.each_with_index {|row, y|
       row.each_with_index {|char, x|
-        node = graph.add_node("#{x},#{y}", location: Mazebot::Coordinate.new(x, y, char))
+        node = graph.add_node(Mazebot::Point.new(x, y), char)
         maze.start = node if char === "A"
         maze.finish = node if char === "B"
       }
@@ -62,17 +62,17 @@ module Mazebot
     # Create and add Edges to anything that isn't connected to an "X" space
     graph.node_hash.values.each do |from|
       from
-        .adjacent_nodes {|x, y| valid_range.includes?(x) && valid_range.includes?(y) }
-        .reject {|node| node.location.character === "X"}
-        .each {|to| graph.add_edge(from, to, Mazebot::Maze.manhattan_distance(maze.start.as(Mazebot::Node).location, to.location))}
+        .adjacent_nodes {|point| valid_range.includes?(point.x) && valid_range.includes?(point.y) }
+        .reject {|node| node.character === "X"}
+        .each {|to| graph.add_edge(from, to, Mazebot::Maze.manhattan_distance(maze.start.as(Mazebot::Node), to))}
     end
 
-    dijkstra = Dijkstra.new(graph, maze.start.as(Node))
-    solution = dijkstra.shortest_path_to(maze.finish.as(Node))
+    dijkstra = Dijkstra.new(graph, maze.start.as(Mazebot::Node))
+    solution = dijkstra.shortest_path_to(maze.finish.as(Mazebot::Node))
     directions = solution.map_with_index do |node, index|
       {
         node: node,
-        direction: node.location.direction_to(solution[index-1].location).as(String)
+        direction: node.direction_to(solution[index-1]).as(String)
       }
     end
     # Remove the starting position

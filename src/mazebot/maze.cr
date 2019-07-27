@@ -10,11 +10,13 @@ module Mazebot
   class SolutionResponse
     JSON.mapping(
       elapsed: Int32?,
+      local_timing: Hash(String, Float64)?,
       message: String?,
       nextMaze: String?,
       result: String?,
+      size: Int32?,
       shortestSolutionLength: Int32?,
-      yourSolutionLength: Int32?,
+      yourSolutionLength: Int32?
     )
   end
 
@@ -28,12 +30,16 @@ module Mazebot
       startingPosition: Array(Int32),
       endingPosition: Array(Int32),
       message: String,
-      exampleSolution: {type: ExampleSolution, nillable: true},
+      # exampleSolution: {type: ExampleSolution, nillable: true},
       map: Array(Array(String))
     )
 
-    def self.manhattan_distance(from : Mazebot::Coordinate, to : Mazebot::Coordinate) : Float64
+    def self.manhattan_distance(from : Mazebot::Point, to : Mazebot::Point) : Float64
       ((from.x - to.x).abs + (from.y - to.y).abs).to_f
+    end
+
+    def self.manhattan_distance(from : Mazebot::Node, to : Mazebot::Node) : Float64
+      self.manhattan_distance(from.point, to.point)
     end
 
     def print
@@ -60,11 +66,15 @@ module Mazebot
 
       # Bottom Border
       puts "".rjust(width, '-')
-      start_s = "Start=[#{@start.as(Mazebot::Node).location.to_s}]"
-      end_s = "End=[#{@finish.as(Mazebot::Node).location.to_s}]"
+      start_s = "Start=[#{@start.as(Mazebot::Node).to_s}]"
+      end_s = "End=[#{@finish.as(Mazebot::Node).to_s}]"
       puts start_s.rjust(start_s.size + 4)
       puts end_s.rjust(end_s.size + 4)
       puts "".rjust(width, '-')
+    end
+
+    def size
+      @map.size
     end
 
     def stringify_rows(&block : Int32, Int32, String -> String) : Array(String)
