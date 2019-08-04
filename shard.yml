@@ -9,7 +9,13 @@ targets:
     main: src/mazebot-crystal.cr
   mazebot-race:
     main: src/mazebot-race.cr
+  mazebot-race-alt:
+    main: src/mazebot-race-alt.cr
 
 crystal: 0.29.0
 
 license: MIT
+
+dependencies:
+  a-star:
+    github: petoem/a-star.cr

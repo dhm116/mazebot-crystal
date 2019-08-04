@@ -34,14 +34,6 @@ module Mazebot
       map: Array(Array(String))
     )
 
-    def self.manhattan_distance(from : Mazebot::Point, to : Mazebot::Point) : Float64
-      ((from.x - to.x).abs + (from.y - to.y).abs).to_f
-    end
-
-    def self.manhattan_distance(from : Mazebot::Node, to : Mazebot::Node) : Float64
-      self.manhattan_distance(from.point, to.point)
-    end
-
     def print
       self.print { |x, y, char| char }
     end

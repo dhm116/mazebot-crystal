@@ -1,13 +1,12 @@
 
 module Mazebot
   class Dijkstra
-    getter distance_to : Hash(Mazebot::Node, Float64)
+    getter distance_to = Hash(Mazebot::Node, Float64).new
 
     def initialize(graph : Mazebot::Graph, source_node : Mazebot::Node)
       @graph = graph
       @source_node = source_node
       @path_to = {} of Mazebot::Node => Mazebot::Node
-      @distance_to = {} of Mazebot::Node => Float64
       @pq = Mazebot::PriorityQueue(Mazebot::Node, Float64).new
 
       compute_shortest_path
@@ -33,8 +32,8 @@ module Mazebot
       @pq.insert(@source_node, 0.to_f64)
       while @pq.any?
         node = @pq.remove_min
-        node.adjacent_edges.each do |adj_edge|
-          relax(adj_edge)
+        node.neighbors.each do |neighbor, weight|
+          relax(node, neighbor, weight.to_f)
         end
       end
     end
@@ -48,19 +47,19 @@ module Mazebot
     # Edge relaxation basically means that we are checking if the shortest known
     # path to a given node is still valid (i.e. we didn't find an even
     # shorter path).
-    def relax(edge : Mazebot::Edge)
-      return if @distance_to[edge.to] <= @distance_to[edge.from] + edge.weight
+    def relax(from : Mazebot::Node, to : Mazebot::Node, weight : Float64)
+      return if @distance_to[to] <= @distance_to[from] + weight
 
-      if @distance_to[edge.from].infinite?
-        @distance_to[edge.from] = 0
+      if @distance_to[from].infinite?
+        @distance_to[from] = 0
       end
 
-      @distance_to[edge.to] = @distance_to[edge.from] + edge.weight
-      @path_to[edge.to] = edge.from
+      @distance_to[to] = @distance_to[from] + weight
+      @path_to[to] = from
 
       # If the node is already in this priority queue, the only that happens is
       # that its distance is decreased.
-      @pq.insert(edge.to, @distance_to[edge.to])
+      @pq.insert(to, @distance_to[to])
     end
   end
 end

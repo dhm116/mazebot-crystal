@@ -6,25 +6,7 @@ module Mazebot
   Domain = "https://api.noopschallenge.com"
 
   def solve(maze : Mazebot::Maze) : String
-    valid_range : Range(Int32, Int32) = 0...maze.map.size
-    graph = Mazebot::Graph.new
-
-    # Create and add nodes to graph
-    maze.map.each_with_index {|row, y|
-      row.each_with_index {|char, x|
-        node = graph.add_node(Mazebot::Point.new(x, y), char)
-        maze.start = node if char === "A"
-        maze.finish = node if char === "B"
-      }
-    }
-
-    # Create and add Edges to anything that isn't connected to an "X" space
-    graph.node_hash.values.each do |from|
-      from
-        .adjacent_nodes {|point| valid_range.includes?(point.x) && valid_range.includes?(point.y) }
-        .reject {|node| node.character === "X"}
-        .each {|to| graph.add_edge(from, to, Mazebot::Maze.manhattan_distance(maze.start.as(Mazebot::Node), to))}
-    end
+    graph = Mazebot::Graph.from(maze)
 
     dijkstra = Dijkstra.new(graph, maze.start.as(Mazebot::Node))
     solution = dijkstra.shortest_path_to(maze.finish.as(Mazebot::Node))
@@ -48,24 +30,7 @@ module Mazebot
     response = HTTP::Client.get "#{Mazebot::Domain}/mazebot/random?minSize=#{size}&maxSize=#{size}"
 
     maze = Mazebot::Maze.from_json(response.body)
-    graph = Mazebot::Graph.new
-
-    # Create and add nodes to graph
-    maze.map.each_with_index {|row, y|
-      row.each_with_index {|char, x|
-        node = graph.add_node(Mazebot::Point.new(x, y), char)
-        maze.start = node if char === "A"
-        maze.finish = node if char === "B"
-      }
-    }
-
-    # Create and add Edges to anything that isn't connected to an "X" space
-    graph.node_hash.values.each do |from|
-      from
-        .adjacent_nodes {|point| valid_range.includes?(point.x) && valid_range.includes?(point.y) }
-        .reject {|node| node.character === "X"}
-        .each {|to| graph.add_edge(from, to, Mazebot::Maze.manhattan_distance(maze.start.as(Mazebot::Node), to))}
-    end
+    graph = Mazebot::Graph.from(maze)
 
     dijkstra = Dijkstra.new(graph, maze.start.as(Mazebot::Node))
     solution = dijkstra.shortest_path_to(maze.finish.as(Mazebot::Node))
@@ -94,6 +59,48 @@ module Mazebot
       solution: solution,
     }
   end
+
+    # Runs A* search from `start` to `goal` and uses block as heuristic function.
+  # Returns `Array(T)` or `Nil` if no path was found.
+  def search(start : Mazebot::Node, goal : Mazebot::Node, &block)
+    open = [] of Mazebot::Node
+    closed = [] of Mazebot::Node
+    open << start
+    start.g = 0
+    start.f = yield start, goal
+
+    until open.empty?
+      current = open.min_by { |a| a.f }
+      return reconstruct_path goal if current == goal
+      open.delete current
+      closed << current
+
+      current.neighbors.each do |neighbor, distance|
+        next if closed.includes? neighbor
+        open << neighbor unless open.includes? neighbor
+        if (new_g = current.g + distance) < neighbor.g
+          neighbor.parent = current
+          neighbor.g = new_g
+          neighbor.f = new_g + yield neighbor, goal
+        end
+      end
+    end
+    open.map! &.reset
+    closed.map! &.reset
+    nil
+  end
+
+  # Reconstructs the path based on a `Node` (usually the goal).
+  # Returns path as an `Array` with start being the first element and goal last.
+  def reconstruct_path(node)
+    path = [] of typeof(node)
+    path << node
+    while node = node.parent
+      path << node
+    end
+    path.reverse!
+  end
+
 end
 
 require "./mazebot/**"
